@@ -17,28 +17,11 @@ pipeline {
         
         stage('Test Docker Container') {
            steps {
-               script {
-                  def containerId = sh(
-                  script: 'docker run --rm -d -P smtij/cw2-server:1.0',
-                  returnStdout: true
-                  ).trim()
-
-                  def port = sh(
-                  script: "docker port ${containerId} 8080 | awk -F: '{print \$2}'",
-                  returnStdout: true
-                  ).trim()
-
-                  echo "Dynamic port: ${port}"
-
-                  sleep 10
-
-                  // Test the application
-                  sh "curl -s http://localhost:${port} | grep 'Hello, DevOps World!'"
-
-                  // Clean up the container
-                  sh "docker stop ${containerId}"  
-                }
-
+                sh '''
+                docker run --rm -d -p 8081:8080 smtij/cw2-server:1.0
+                sleep 5
+                curl -s http://localhost:8081 | grep "Hello, DevOps World!"
+                '''
              }
         }
  
