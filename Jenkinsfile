@@ -17,13 +17,33 @@ pipeline {
         
         stage('Test Docker Container') {
            steps {
-                sh '''
-                docker run --rm -d -p 8081:8080 smtij/cw2-server:1.0
-                sleep 5
-                curl -s http://localhost:8081 | grep "Hello, DevOps World!"
-                '''
-             }
-        }
+               script {
+                  echo "Starting test container..."
+            
+                  // Start container and capture its ID
+                  def containerId = sh(
+                  script: 'docker run --rm -d -p 8081:8080 smtij/cw2-server:1.0',
+                  returnStdout: true
+                  ).trim()
+                  echo "Started container: ${containerId}"
+            
+                  // Wait for the application to initialize
+                  sleep 10
+            
+                  // Test the application
+                  def response = sh(
+                  script: 'curl -s http://localhost:8081',
+                  returnStdout: true
+                  ).trim()
+                  echo "Response from application: ${response}"
+            
+                  // Validate the response
+                  if (!response.contains("Hello, DevOps World!")) {
+                  error "Application did not return the expected response."
+            }
+         }
+      }
+    }
  
        stage('Push to DockerHub') {
             steps {
