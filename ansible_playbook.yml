@@ -1,0 +1,27 @@
+---
+- hosts: localhost
+  become: true
+  tasks:
+    - name: Install Kubectl
+      apt:
+        name: kubectl
+        state: present
+
+    - name: Install Minikube
+      shell: |
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+    - name: Start Minikube
+      shell: |
+        minikube start --driver=docker
+
+    - name: Deploy application to Kubernetes
+      shell: |
+        kubectl apply -f deployment.yml
+        kubectl rollout status deployment/cw2-server
+
+    - name: Verify Deployment
+      shell: |
+        kubectl get pods
+        kubectl get services
