@@ -18,7 +18,6 @@ pipeline {
         stage('Test Docker Container') {
            steps {
                script {
-                   stage('Test Docker Container') {
                      // Start container and capture container ID
                      def containerId = sh(script: "docker run --rm -d -P smtij/cw2-server:1.0", returnStdout: true).trim()
                      echo "Started container: ${containerId}"
