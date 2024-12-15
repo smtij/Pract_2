@@ -30,8 +30,10 @@ pipeline {
 
                   echo "Dynamic port: ${port}"
 
+                  sleep 10
+
                   // Test the application
-                  sh "curl -s http://localhost:${port}"
+                  sh "curl -s http://localhost:${port} | grep 'Hello, DevOps World!'"
 
                   // Clean up the container
                   sh "docker stop ${containerId}"  
