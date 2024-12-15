@@ -19,7 +19,7 @@ pipeline {
                     sh '''
                     docker run --rm -d -p 8080:8080 smtij/cw2-server:1.0
                     sleep 5
-                    curl -s http://localhost:8080
+                    curl -s http://localhost:8081
                     '''
             }
         }
