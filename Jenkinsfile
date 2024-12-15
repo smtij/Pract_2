@@ -18,11 +18,24 @@ pipeline {
         stage('Test Docker Container') {
            steps {
                script {
-                   def containerId = sh(script: "docker run --rm -d -P smtij/cw2-server:1.0", returnStdout: true).trim()
-                   def containerPort = sh(script: "docker port ${containerId} 8080 | awk -F: '{print \$2}'", returnStdout: true).trim()
-                   sh "sleep 5"
-                   sh "curl -s http://localhost:${containerPort}"
-                   sh "docker stop ${containerId}"  
+                   stage('Test Docker Container') {
+                     // Start container and capture container ID
+                     def containerId = sh(script: "docker run --rm -d -P smtij/cw2-server:1.0", returnStdout: true).trim()
+                     echo "Started container: ${containerId}"
+            
+                     // Extract dynamic port
+                     def containerPort = sh(script: "docker port ${containerId} 8080 | awk -F: '{print \$2}'", returnStdout: true).trim()
+                     echo "Dynamic port: ${containerPort}"
+
+                     // Allow time for the container to start
+                     sh "sleep 5"
+
+                     // Test application
+                     sh "curl -s http://localhost:${containerPort}"
+
+                     // Stop the container after test
+                     sh "docker stop ${containerId}"
+  
                 }
 
              }
