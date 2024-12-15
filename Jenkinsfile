@@ -16,7 +16,11 @@ pipeline {
         }
         stage('Test Docker Container') {
             steps {
-                sh 'docker run --rm smtij/cw2-server:1.0 curl -s http://localhost:8080'
+                    sh '''
+                    docker run --rm -d -p 8080:8080 smtij/cw2-server:1.0
+                    sleep 5
+                    curl -s http://localhost:8080
+                    '''
             }
         }
         stage('Push to DockerHub') {
