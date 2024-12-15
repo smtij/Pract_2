@@ -17,20 +17,19 @@ pipeline {
         stage('Test Docker Container') {
             steps {
                     stage('Test Docker Container') {
-    steps {
-        sh '''
-        docker run --rm -d -P --name test-container smtij/cw2-server:1.0
-        CONTAINER_PORT=$(docker port test-container 8080 | awk -F: '{print $2}')
-        sleep 5
-        curl -s http://localhost:$CONTAINER_PORT
-        docker stop test-container
-        '''
-    }
-}
+                       steps {
+                          script {
+                                def containerId = sh(script: "docker run --rm -d -P smtij/cw2-server:1.0", returnStdout: true).trim()
+                                def containerPort = sh(script: "docker port ${containerId} 8080 | awk -F: '{print \$2}'", returnStdout: true).trim()
+                                sh "sleep 5"
+                                sh "curl -s http://localhost:${containerPort}"
+                                sh "docker stop ${containerId}"
+    
+                              }
 
 
-            }
-        }
+                     }
+         }
         stage('Push to DockerHub') {
             steps {
                 sh '''
