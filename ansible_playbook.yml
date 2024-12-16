@@ -2,10 +2,10 @@
 - hosts: localhost
   become: true
   tasks:
-    - name: Install Kubectl
-      apt:
+    - name: Install Kubectl using Snap
+      snap:
         name: kubectl
-        state: present
+        classic: true
 
     - name: Install Minikube
       shell: |
@@ -14,7 +14,7 @@
 
     - name: Start Minikube
       shell: |
-        minikube start --driver=docker
+        minikube start --driver=none
 
     - name: Deploy application to Kubernetes
       shell: |
@@ -24,4 +24,8 @@
     - name: Verify Deployment
       shell: |
         kubectl get pods
-        kubectl get services
+
+    - name: Install conntrack
+      apt:
+      name: conntrack
+      state: present
