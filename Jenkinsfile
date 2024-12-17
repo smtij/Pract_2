@@ -68,7 +68,7 @@ pipeline {
             steps {
                 echo "Deploying to Production Server via SSH..."
                 sh '''
-                ssh -o StrictHostKeyChecking=no -i ~/Desktop/DevOps/Pract2/labsuser.pem ubuntu@<Production_Server_IP> '
+               ssh -o StrictHostKeyChecking=no -i ~/Desktop/DevOps/Pract2/labsuser.pem ubuntu@ec2-54-82-181-14.compute-1.amazonaws.com '
                     docker pull smtij/cw2-server:1.0 &&
                     docker stop cw2-container || true &&
                     docker rm cw2-container || true &&
