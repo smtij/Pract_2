@@ -1,14 +1,24 @@
 pipeline {
     agent any
     environment {
-        DOCKERHUB_USERNAME = "smtij" // Your DockerHub username
-        DOCKERHUB_TOKEN = "dckr_pat_0EkjhiyRjMspzq-Nzcz-iGOblSg" // Replace with your token
+        DOCKERHUB_USERNAME = "smtij" // DockerHub username
+        DOCKERHUB_TOKEN = "dckr_pat_0EkjhiyRjMspzq-Nzcz-iGOblSg" // DockerHub access token
     }
     stages {
         stage('Checkout') {
             steps {
                 echo "Checking out code from SCM..."
                 checkout scm
+            }
+        }
+
+        stage('Clean Up') {
+            steps {
+                echo "Stopping and removing any running containers..."
+                sh '''
+                docker stop $(docker ps -q) || true
+                docker rm $(docker ps -aq) || true
+                '''
             }
         }
 
@@ -28,7 +38,7 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     echo "Started container: ${containerId}"
-                    
+
                     sleep 10 // Wait for the container to start
 
                     def response = sh(
