@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        DOCKERHUB_USERNAME = "smtij" // DockerHub username
-        DOCKERHUB_TOKEN = "dckr_pat_0EkjhiyRjMspzq-Nzcz-iGOblSg" // DockerHub access token
+        DOCKERHUB_USERNAME = "smtij"
+        DOCKERHUB_TOKEN = "dckr_pat_0EkjhiyRjMspzq-Nzcz-iGOblSg"
     }
     stages {
         stage('Checkout') {
@@ -16,8 +16,8 @@ pipeline {
             steps {
                 echo "Stopping and removing any running containers..."
                 sh '''
-                docker stop $(docker ps -q) || true
-                docker rm $(docker ps -aq) || true
+                docker stop $(docker ps -q --filter "publish=8081") || true
+                docker rm $(docker ps -aq --filter "publish=8081") || true
                 '''
             }
         }
@@ -56,7 +56,7 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                echo "Logging in to DockerHub and pushing the Docker image..."
+                echo "Pushing the Docker image to DockerHub..."
                 sh '''
                 echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USERNAME}" --password-stdin
                 docker push smtij/cw2-server:1.0
@@ -68,11 +68,11 @@ pipeline {
             steps {
                 echo "Deploying to Production Server via SSH..."
                 sh '''
-                    ssh -o StrictHostKeyChecking=no -i /home/ubuntu/labsuser.pem ubuntu@ec2-54-82-181-14.compute-1.amazonaws.com '
-                        docker pull smtij/cw2-server:1.0 &&
-                        docker stop cw2-container || true &&
-                        docker rm cw2-container || true &&
-                        docker run -d -p 80:8080 --name cw2-container smtij/cw2-server:1.0
+                ssh -o StrictHostKeyChecking=no -i /home/ubuntu/labsuser.pem ubuntu@ec2-54-82-181-14.compute-1.amazonaws.com '
+                    docker pull smtij/cw2-server:1.0 &&
+                    docker stop cw2-container || true &&
+                    docker rm cw2-container || true &&
+                    docker run -d -p 80:8080 --name cw2-container smtij/cw2-server:1.0
                 '
                 '''
             }
@@ -82,20 +82,8 @@ pipeline {
             steps {
                 echo "Verifying deployment on Production Server..."
                 sh '''
-                ssh -o StrictHostKeyChecking=no -i ~/Desktop/DevOps/Pract2/labsuser.pem ubuntu@<Production_Server_IP> '
+                ssh -o StrictHostKeyChecking=no -i /home/ubuntu/labsuser.pem ubuntu@ec2-54-82-181-14.compute-1.amazonaws.com '
                     curl -s http://localhost:80
-                '
-                '''
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo "Deploying to Kubernetes cluster..."
-                sh '''
-                ssh -o StrictHostKeyChecking=no -i ~/Desktop/DevOps/Pract2/labsuser.pem ubuntu@<Production_Server_IP> '
-                    kubectl apply -f deployment.yml &&
-                    kubectl rollout status deployment/cw2-server
                 '
                 '''
             }
