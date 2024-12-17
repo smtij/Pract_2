@@ -2,14 +2,9 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_USERNAME = "smtij"
-        DOCKERHUB_TOKEN = credentials('docker-hub-token') // Use Jenkins Credentials Plugin for DockerHub Token
-        SSH_KEY_PATH = "/home/ubuntu/labsuser.pem" // Path to SSH key for EC2
-        EC2_HOST = "ec2-54-82-181-14.compute-1.amazonaws.com" // Production EC2 host
-        DOCKER_IMAGE = "smtij/cw2-server:1.0" // Docker image name
+        DOCKERHUB_TOKEN = "dckr_pat_0EkjhiyRjMspzq-Nzcz-iGOblSg"
     }
-
     stages {
-        // Checkout the code from the Git repository
         stage('Checkout') {
             steps {
                 echo "Checking out code from SCM..."
@@ -17,7 +12,6 @@ pipeline {
             }
         }
 
-        // Clean up any existing containers before building the new one
         stage('Clean Up') {
             steps {
                 echo "Stopping and removing any running containers..."
@@ -28,7 +22,6 @@ pipeline {
             }
         }
 
-        // Build the Docker image from the codebase
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image..."
@@ -36,7 +29,6 @@ pipeline {
             }
         }
 
-        // Test the Docker container by running it locally and checking its output
         stage('Test Docker Container') {
             steps {
                 script {
@@ -49,14 +41,12 @@ pipeline {
 
                     sleep 10 // Wait for the container to start
 
-                    // Test the running application
                     def response = sh(
                         script: 'curl -s http://localhost:8081',
                         returnStdout: true
                     ).trim()
                     echo "Response from application: ${response}"
 
-                    // Verify the expected response
                     if (!response.contains("Hello, DevOps World!")) {
                         error "Application did not return the expected response."
                     }
@@ -64,7 +54,6 @@ pipeline {
             }
         }
 
-        // Push the Docker image to DockerHub
         stage('Push to DockerHub') {
             steps {
                 echo "Pushing the Docker image to DockerHub..."
@@ -75,12 +64,11 @@ pipeline {
             }
         }
 
-        // Deploy the Docker image to the production server (EC2)
         stage('Deploy to Production Server') {
             steps {
                 echo "Deploying to Production Server via SSH..."
                 sh '''
-                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_HOST} '
+                ssh -o StrictHostKeyChecking=no -i /home/ubuntu/labsuser.pem ubuntu@ec2-54-82-181-14.compute-1.amazonaws.com '
                     docker pull smtij/cw2-server:1.0 &&
                     docker stop cw2-container || true &&
                     docker rm cw2-container || true &&
@@ -90,19 +78,17 @@ pipeline {
             }
         }
 
-        // Verify the deployment on the production server
         stage('Verify Production Deployment') {
             steps {
                 echo "Verifying deployment on Production Server..."
                 sh '''
-                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${EC2_HOST} '
+                ssh -o StrictHostKeyChecking=no -i /home/ubuntu/labsuser.pem ubuntu@ec2-54-82-181-14.compute-1.amazonaws.com '
                     curl -s http://localhost:80
                 '
                 '''
             }
         }
     }
-
     post {
         success {
             echo "Pipeline executed successfully!"
