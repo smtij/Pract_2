@@ -1,7 +1,8 @@
 pipeline {
     agent any
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // DockerHub credentials stored in Jenkins
+        DOCKERHUB_USERNAME = "smtij" // Your DockerHub username
+        DOCKERHUB_TOKEN = "dckr_pat_0EkjhiyRjMspzq-Nzcz-iGOblSg" // Replace with your token
     }
     stages {
         stage('Checkout') {
@@ -10,12 +11,14 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image..."
                 sh 'docker build -t smtij/cw2-server:1.0 .'
             }
         }
+
         stage('Test Docker Container') {
             steps {
                 script {
@@ -26,7 +29,7 @@ pipeline {
                     ).trim()
                     echo "Started container: ${containerId}"
                     
-                    sleep 10 // Give the container time to start
+                    sleep 10 // Wait for the container to start
 
                     def response = sh(
                         script: 'curl -s http://localhost:8081',
@@ -34,22 +37,23 @@ pipeline {
                     ).trim()
                     echo "Response from application: ${response}"
 
-                    // Validate response
                     if (!response.contains("Hello, DevOps World!")) {
                         error "Application did not return the expected response."
                     }
                 }
             }
         }
+
         stage('Push to DockerHub') {
             steps {
-                echo "Pushing Docker image to DockerHub..."
+                echo "Logging in to DockerHub and pushing the Docker image..."
                 sh '''
-                echo "$DOCKERHUB_CREDENTIALS_USR:$DOCKERHUB_CREDENTIALS_PSW" | docker login --username "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
+                echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USERNAME}" --password-stdin
                 docker push smtij/cw2-server:1.0
                 '''
             }
         }
+
         stage('Deploy to Production Server') {
             steps {
                 echo "Deploying to Production Server via SSH..."
@@ -63,6 +67,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Verify Production Deployment') {
             steps {
                 echo "Verifying deployment on Production Server..."
@@ -73,6 +78,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Deploy to Kubernetes') {
             steps {
                 echo "Deploying to Kubernetes cluster..."
@@ -83,6 +89,14 @@ pipeline {
                 '
                 '''
             }
+        }
+    }
+    post {
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check the logs for errors."
         }
     }
 }
