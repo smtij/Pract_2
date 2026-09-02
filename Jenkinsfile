@@ -2,7 +2,9 @@ pipeline {
     agent any
     environment {
         DOCKERHUB_USERNAME = "smtij"
-        DOCKERHUB_TOKEN = "dckr_pat_0EkjhiyRjMspzq-Nzcz-iGOblSg"
+        // Read from a credential stored in Jenkins (Manage Jenkins > Credentials),
+        // never hardcoded in the pipeline file.
+        DOCKERHUB_TOKEN = credentials('dockerhub-token')
     }
     stages {
         stage('Checkout') {
